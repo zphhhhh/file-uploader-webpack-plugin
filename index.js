@@ -11,7 +11,7 @@ const FormData = require('form-data');
 class FileUploaderWebpackPlugin {
     /**
      * generete options
-     * @param {FileUploaderObject} options
+     * @param {FileUploaderOptions} options
      */
     constructor(options) {
         this.options = Object.assign({
