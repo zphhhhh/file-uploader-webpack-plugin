@@ -1,6 +1,6 @@
 {
   "name": "file-uploader-webpack-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "🖐Upload files with webpack",
   "main": "index.js",
   "types": "index.d.ts",
