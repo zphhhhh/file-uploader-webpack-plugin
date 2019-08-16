@@ -7,6 +7,7 @@ const path = require('path');
 const axios = require('axios');
 const chalk = require('chalk')
 const FormData = require('form-data');
+const utils = require('./utils');
 
 class FileUploaderWebpackPlugin {
     /**
@@ -40,7 +41,7 @@ class FileUploaderWebpackPlugin {
                     const promises = assets.slice(i, i + parallel).map(([filename, file]) => this.genPostPromise({
                         compiler,
                         compilation,
-                        filename,
+                        filename: filename.split('?')[0],
                         file,
                         receiver,
                         to,
@@ -71,7 +72,7 @@ class FileUploaderWebpackPlugin {
                 const errorAssets = Object.entries(retryTimes).filter(item => item[1] > retry);
 
                 if (errorAssets.length > 0) {
-                    let maxLength = errorAssets.reduce((length, [filename]) => Math.max(length, filename.length), -1);
+                    let maxLength = Math.max(...errorAssets.map(([filename]) => filename.length));
 
                     console.warn(`${logBanner} ${chalk.red.bold('Failed list:')}`);
                     errorAssets.forEach(([filename]) => {
@@ -132,15 +133,15 @@ class FileUploaderWebpackPlugin {
             axios.post(receiver, form, {
                 headers: form.getHeaders()
             }).then(result => {
-                const currentTime = this.getCurrentTime();
+                const currentTime = utils.getCurrentTime();
                 const filepath = compiler.outputFileSystem.join(compilation.getPath(compiler.outputPath), filename);
 
                 console.log(
                     chalk.green.bold(' - ')
                     + chalk.grey(currentTime) + ' '
-                    + this.getCutText(filepath.split('?')[0])
+                    + utils.getCutText(filepath)
                     + chalk.yellow.bold(' >> ')
-                    + this.getCutText(formTo.split('?')[0])
+                    + utils.getCutText(formTo)
                 );
 
                 resolve(result);
@@ -148,34 +149,6 @@ class FileUploaderWebpackPlugin {
                 resolve(new Error(error));
             });
         });
-    }
-
-    /**
-     * return current time as `HH:MM:SS`
-     * @returns {string} the current time string
-     */
-    getCurrentTime() {
-        const date = new Date();
-
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        const seconds = date.getSeconds().toString().padStart(2, '0');
-
-        return `${hours}:${minutes}:${seconds}`;
-    }
-
-    /**
-     * get the cut string with max length
-     * @param {string} text source string
-     * @param {number} limit max length of the string
-     * @returns {string} the cut string, replaced by `...`
-     */
-    getCutText(text, limit = 60) {
-        if (limit < 5 || limit > text.length) {
-            return text;
-        }
-
-        return text.slice(0, limit / 4) + '...' + text.slice(- limit / 4 * 3 + 3);
     }
 }
 
